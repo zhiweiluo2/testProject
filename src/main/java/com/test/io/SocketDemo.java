@@ -136,8 +136,6 @@ class ClientChatHandler implements Runnable {
                     for (int i = 0; i < getDataLength; i++) {
                         chatContent[i] = bytes[i];
                     }
-
-
                     System.out.println("server：" + new String(chatContent));
                 }
 
