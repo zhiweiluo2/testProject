@@ -139,7 +139,6 @@ class ClientChatHandler implements Runnable {
                     System.out.println("server：" + new String(chatContent));
                 }
 
-
                 // 聊天已收到回复
                 synchronized (this){
                     this.setHasAnswer(true);
