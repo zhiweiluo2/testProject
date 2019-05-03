@@ -22,8 +22,8 @@ public class SocketDemo {
             Scanner scanner = new Scanner(System.in);//读取键盘输入
             boolean chatIsNotOver = true;
             while (chatIsNotOver) {
-                while (!clientChatHandler.getHasAnswer()){
-                    synchronized (clientChatHandler){
+                while (!clientChatHandler.getHasAnswer()) {
+                    synchronized (clientChatHandler) {
                         clientChatHandler.wait();
                     }
                 }
@@ -35,7 +35,7 @@ public class SocketDemo {
                 if (askStr.equals("#endChat#")) {//用户想结束会话
                     askStr = "#END#";   //发给服务器
                     socketOut.write(askStr.getBytes());
-                  // 提示子线程：聊天已经结束了
+                    // 提示子线程：聊天已经结束了
                     clientChatHandler.setOver(true);
 
                     break;//跳出循环
@@ -45,7 +45,7 @@ public class SocketDemo {
                 socketOut.write(askStr.getBytes());
 
                 // 设置当前聊天内容尚未回复
-                synchronized (clientChatHandler){
+                synchronized (clientChatHandler) {
                     clientChatHandler.setHasAnswer(false);
                 }
             }
@@ -53,9 +53,9 @@ public class SocketDemo {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally{
+        } finally {
             if (client != null) {
                 try {
                     client.close();
@@ -80,11 +80,11 @@ class ClientChatHandler implements Runnable {
         isOver = over;
     }
 
-    public void setHasAnswer(boolean hasAnswer){
+    public void setHasAnswer(boolean hasAnswer) {
         this.hasAnswer = hasAnswer;
     }
 
-    public boolean getHasAnswer(){
+    public boolean getHasAnswer() {
         return hasAnswer;
     }
 
@@ -93,54 +93,17 @@ class ClientChatHandler implements Runnable {
         while (!isOver) {// 一直循环，直到收到通知
             try {
                 // 一次读入当前接收到的所有数据
-                byte[] bytes = new byte[1024*1024*10];
+                byte[] bytes = new byte[1024 * 1024 * 10];
                 int getDataLength = socketIns.read(bytes);
 
-                // 判断是否是接收文件
-                // 1. 提取标识头
-                int markLen = "#SEND_FILE#".length(); //
-                byte[] tempBytes = new byte[markLen];
-                for (int i = 0; i < markLen; i++) {
-                    tempBytes[i] = bytes[i];
+                byte[] chatContent = new byte[getDataLength];
+                for (int i = 0; i < getDataLength; i++) {
+                    chatContent[i] = bytes[i];
                 }
-                String tempStr = new String(tempBytes);
-                // 2. 判断
-                if ("#SEND_FILE#".equals(tempStr)) {// true : 接收文件
-                    //获取文件名字
-                    int fileNameLen = markLen;
-                    for (; fileNameLen < getDataLength; fileNameLen++) {
-                        if ('#' == bytes[fileNameLen]){
-                            break;
-                        }
-                    }
-                    fileNameLen -= markLen;
-                    byte[] fileNameBytes = new byte[fileNameLen];
-                    for (int j = 0 ; j < fileNameLen; j++){
-                        fileNameBytes[j] = bytes[markLen + j];
-                    }
-                    String fileName = new String(fileNameBytes);
-
-                    // 将接收到的字节存入磁盘中
-                    String filePath = "D:\\java\\test\\" + fileName;
-                    File aFile = new File(filePath);
-                    aFile.createNewFile();
-
-                    FileOutputStream fileOutputStream = new FileOutputStream(aFile);
-                    fileOutputStream.write(bytes, markLen+fileNameLen+1, getDataLength - (markLen+fileNameLen)-1);
-                    fileOutputStream.flush();
-
-                    System.out.println("文件["+filePath+"]下载完毕");
-                } else {
-                    // 剩下的一种情况就是聊天
-                    byte[] chatContent = new byte[getDataLength];
-                    for (int i = 0; i < getDataLength; i++) {
-                        chatContent[i] = bytes[i];
-                    }
-                    System.out.println("server：" + new String(chatContent));
-                }
+                System.out.println("server：" + new String(chatContent));
 
                 // 聊天已收到回复
-                synchronized (this){
+                synchronized (this) {
                     this.setHasAnswer(true);
                     this.notify();
                 }

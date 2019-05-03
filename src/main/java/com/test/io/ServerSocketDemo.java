@@ -57,34 +57,6 @@ class ServerChatHandler implements Runnable {
                     return;//退出函数, 则线程结束
                 }
 
-                // 如果"#GET_FILE#filePath#", 意味着客户端想获取file
-                if (str.startsWith("#GET_FILE#")) {
-                    // 截取filePath部分出来
-                    str = str.substring("#GET_FILE#".length(), str.length()-1);
-                    //读取磁盘文件
-                    File targetFile = new File(str);
-                    if (targetFile.exists()){//判断文件是否存在
-                        char[] send_file = ("#SEND_FILE#"+targetFile.getName()+"#").toCharArray();
-                        byte[] fileBytes = new byte[send_file.length + (int)targetFile.length()];
-                        for (int i = 0; i < send_file.length; i++) {
-                            fileBytes[i] = (byte) send_file[i];
-                        }
-
-                        FileInputStream fileInputStream = new FileInputStream(targetFile);
-                        fileInputStream.read(fileBytes, send_file.length,fileBytes.length-send_file.length);
-                        fileInputStream.close();
-
-                        // 以"#SEND_FILE#"开头作为标识符，供client识别字节。
-                        outputStream.write(fileBytes);// 仅仅是写到操作系统的缓冲区而已
-                        outputStream.flush();//强制要求操作系统将缓冲区的数据刷出去（网卡）
-                    } else {// 文件不存在，先忽略
-                        outputStream.write("target file not found...".getBytes());
-                    }
-
-                    continue;
-                }
-
-                // 剩下的一种情况就是聊天
                 System.out.print("我：");
                 //利用hasNextXXX()判断是否还有下一输入项
                 String answerStr = sc.nextLine();
